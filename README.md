@@ -1,7 +1,7 @@
 # java-demo-ms
 This is the demo app for the devops practice
 
-DevSecOps Security Principles (Production Explanation)
+DevSecOps Security Principles
 🔐 1. Shift-Left Security
 
 Security runs before deployment, not after incidents.
