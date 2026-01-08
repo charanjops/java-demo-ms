@@ -3,8 +3,9 @@ name: Java Microservice CI-CD (Prod | DevSecOps)
 on:
   pull_request:
     types: [closed]
-    branches:
-      - main
+    branches: [ main ]
+  push:
+    branches: [ main ]
 
 env:
   APP_NAME: java-microservice
@@ -17,7 +18,9 @@ jobs:
   # CI – Secure Build & Validate
   # ============================
   ci:
-    if: github.event.pull_request.merged == true
+    if: |
+      github.event_name == 'push' ||
+      github.event.pull_request.merged == true
     name: CI - Build, Test & Secure
     runs-on: ubuntu-latest
 
