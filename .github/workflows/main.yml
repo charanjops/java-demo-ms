@@ -1,1 +1,110 @@
-test
+name: Java Microservice CI-CD (Prod | DevSecOps)
+
+on:
+  pull_request:
+    types: [closed]
+    branches: [ main ]
+  push:
+    branches: [ main ]
+
+env:
+  APP_NAME: java-microservice
+  IMAGE_NAME: ${{ secrets.DOCKER_USERNAME }}/java-microservice
+  IMAGE_TAG: ${{ github.sha }}
+
+jobs:
+
+  # ============================
+  # CI – Secure Build & Validate
+  # ============================
+  ci:
+    if: |
+      github.event_name == 'push' ||
+      github.event.pull_request.merged == true
+    name: CI - Build, Test & Secure
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      security-events: write
+
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v4
+
+      # -------- SAST --------
+      - name: Static Code Analysis (Semgrep)
+        uses: returntocorp/semgrep-action@v1
+        with:
+          config: p/java
+        continue-on-error: false
+
+      # -------- Dependency Scan --------
+      - name: Dependency Vulnerability Scan (OWASP Dependency Check)
+        uses: dependency-check/Dependency-Check_Action@v3
+        with:
+          project: java-microservice
+          format: ALL
+          failOnCVSS: 7
+        continue-on-error: false
+
+      # -------- Build --------
+      - name: Setup JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Build & Unit Test
+        run: mvn clean verify --no-transfer-progress
+
+      # -------- Docker Build --------
+      - name: Build Docker Image
+        run: docker build -t $IMAGE_NAME:$IMAGE_TAG .
+
+      # -------- Image Scan --------
+      - name: Scan Container Image (Trivy)
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: $IMAGE_NAME:$IMAGE_TAG
+          format: table
+          severity: HIGH,CRITICAL
+          exit-code: 1
+
+      # -------- Registry Login --------
+      - name: Login to Docker Registry
+        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login \
+              -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+
+      - name: Push Docker Image
+        run: docker push $IMAGE_NAME:$IMAGE_TAG
+
+  # ============================
+  # CD – GitOps via Argo CD
+  # ============================
+  cd:
+    name: CD - GitOps Deploy via Argo CD
+    needs: ci
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout GitOps Repository
+        uses: actions/checkout@v4
+        with:
+          repository: your-org/java-microservice-gitops
+          token: ${{ secrets.GITOPS_TOKEN }}
+
+      - name: Update Image Tag
+        run: |
+          sed -i "s|image:.*|image: $IMAGE_NAME:$IMAGE_TAG|" k8s/deployment.yaml
+
+      - name: Commit & Push (GitOps)
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git add .
+          git commit -m "prod: deploy $APP_NAME ($IMAGE_TAG)"
+          git push origin main
