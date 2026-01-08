@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: java-health-service
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: java-health-service
+  template:
+    metadata:
+      labels:
+        app: java-health-service
+    spec:
+      containers:
+      - name: app
+        image: java-health-service:1.0
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8080
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
