@@ -67,7 +67,7 @@ jobs:
       - name: Scan Container Image (Trivy)
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: $IMAGE_NAME:$IMAGE_TAG
+          image-ref: ${{ secrets.DOCKER_USERNAME }}/java-microservice:${{ github.sha }}
           format: table
           severity: HIGH,CRITICAL
           exit-code: 1
