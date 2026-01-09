@@ -100,7 +100,7 @@ jobs:
 
     - name: Update Image Tag
       run: |
-        sed -i "s|image:.*|image: $IMAGE_NAME:$IMAGE_TAG|" k8s/deployment.yaml
+        sed -i "s|image:.*|image: $IMAGE_NAME:$IMAGE_TAG|" k8s/deployment.yml
 
     - name: Commit & Push (GitOps)
       run: |
