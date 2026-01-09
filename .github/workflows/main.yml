@@ -73,9 +73,11 @@ jobs:
           exit-code: 1
 
       # -------- Registry Login --------
-      - name: Login to Docker Registry
-        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login \
-              -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_ACCESS_TOKEN }}
 
       - name: Push Docker Image
         run: docker push $IMAGE_NAME:$IMAGE_TAG
@@ -92,20 +94,17 @@ jobs:
       contents: write
 
     steps:
-      - name: Checkout GitOps Repository
-        uses: actions/checkout@v4
-        with:
-          repository: your-org/java-microservice-gitops
-          token: ${{ secrets.GITOPS_TOKEN }}
+    - name: Checkout repository
+      uses: actions/checkout@v4
 
-      - name: Update Image Tag
-        run: |
-          sed -i "s|image:.*|image: $IMAGE_NAME:$IMAGE_TAG|" k8s/deployment.yaml
+    - name: Update Image Tag
+      run: |
+        sed -i "s|image:.*|image: $IMAGE_NAME:$IMAGE_TAG|" k8s/deployment.yaml
 
-      - name: Commit & Push (GitOps)
-        run: |
-          git config user.name "github-actions"
-          git config user.email "github-actions@github.com"
-          git add .
-          git commit -m "prod: deploy $APP_NAME ($IMAGE_TAG)"
-          git push origin main
+    - name: Commit & Push (GitOps)
+      run: |
+        git config user.name "github-actions"
+        git config user.email "github-actions@github.com"
+        git add k8s/deployment.yaml
+        git commit -m "prod: deploy $APP_NAME ($IMAGE_TAG)"
+        git push origin main
