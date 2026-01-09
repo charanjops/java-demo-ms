@@ -78,5 +78,5 @@ GitHub token → GitOps repo only
 
 Argo CD → namespace-scoped RBAC
 
-No cluster-admin rights
+No cluster-admin rights 
  
