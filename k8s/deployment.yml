@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: app
-        image: java-health-service:1.0
+        image: charanjops/java-microservice:50883bb50d3a82ba26c85233c887604e0c57eaa1
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 8080
