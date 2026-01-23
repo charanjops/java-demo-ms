@@ -1,12 +1,11 @@
-FROM maven:3.9.6-eclipse-temurin-17 AS build
+FROM gradle:7.5.1-jdk17-alpine AS build
 WORKDIR /app
-COPY pom.xml .
-RUN mvn dependency:go-offline
-COPY src ./src
-RUN mvn package -DskipTests
+COPY --chown=gradle:gradle . /app
+RUN gradle build --no-daemon --stacktrace
 
-FROM eclipse-temurin:17-jre
+FROM gcr.io/distroless/java:17
 WORKDIR /app
-COPY --from=build /app/target/java-health-service-1.0.0.jar app.jar
+COPY --from=build /app/build/libs/java-demo-ms-0.0.1-SNAPSHOT.jar /app/
 EXPOSE 8080
-ENTRYPOINT ["java","-jar","app.jar"]
+USER nonroot:nonroot
+CMD ["java", "-jar", "java-demo-ms-0.0.1-SNAPSHOT.jar"]
