@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
       - name: app
-        image: charanjops/java-microservice:4796fa42c50cfa7f077e410b9c18254cd0af17e3
+        image: charanjops/java-microservice:ffa7969997106c4c051aac1adf77fd331b8e765a
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 8080
