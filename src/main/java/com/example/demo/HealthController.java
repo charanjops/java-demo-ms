@@ -13,7 +13,7 @@ public class HealthController {
     @GetMapping("/hello")
     public String hello() {
         log.info("Hello endpoint called");
-        return "Hello from Demo Service1";
+        return "Hello from Demo Service2";
     }
 
     @GetMapping("/time")
